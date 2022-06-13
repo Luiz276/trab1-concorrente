@@ -26,16 +26,21 @@ void* student_run(void *arg)
 void student_seat(student_t *self, table_t *table)
 {
     /* Insira sua lógica aqui */
+    // aluno sai do buffet
+    // Lógica onde o aluno procura um assento vago em uma mesa
 }
 
 void student_serve(student_t *self)
 {
     /* Insira sua lógica aqui */
+    // o aluno se serve baseado nas preferências que possui
+    //
 }
 
 void student_leave(student_t *self, table_t *table)
 {
     /* Insira sua lógica aqui */
+    // aluno sai do RU e deixa sua posição na mesa vaga
 }
 
 /* --------------------------------------------------------- */

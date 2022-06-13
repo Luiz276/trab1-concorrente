@@ -2,6 +2,14 @@
 #include "buffet.h"
 #include "config.h"
 
+sem_t buffet_sem_esq[config.buffets];   // checar aonde incluir o pthreads.h e o semaphore.h
+sem_t buffet_sem_dir[config.buffets];
+
+/*
+TODO:
+arquivo ainda não está pronto, tentando me organizar
+com o posicionamento e a necessidade de semáforos
+*/
 
 void *buffet_run(void *arg)
 {   
@@ -36,8 +44,11 @@ void buffet_init(buffet_t *self, int number_of_buffets)
         for(j= 0; j< 5; j++){
              /* A fila esquerda do buffet possui cinco posições. */
             self[i].queue_left[j] = 0;
+            sem_init(&buffet_sem_esq[i],0,5);   // inicializando semaforo do buffet
+
             /* A fila esquerda do buffet possui cinco posições. */
             self[i].queue_right[j] = 0;
+            sem_init(&buffet_sem_dir[i],0,5);   // inicializando semaforo do buffet
         }
 
         pthread_create(&self[i].thread, NULL, buffet_run, &self[i]);
