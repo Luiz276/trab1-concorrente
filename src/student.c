@@ -10,6 +10,9 @@
 #include "globals.h"
 #include "table.h"
 
+extern int number_of_tables_global;
+extern int seats_per_table_global;
+
 void* student_run(void *arg)
 {
     student_t *self = (student_t*) arg;
@@ -27,14 +30,36 @@ void student_seat(student_t *self, table_t *table)
 {
     /* Insira sua lógica aqui */
     // aluno sai do buffet
-    // Lógica onde o aluno procura um assento vago em uma mesa
+    // Lógica onde o aluno procura uma cadeira vaga em uma mesa
+    // loop que itera pelo array de mesas até achar uma com uma cadeira vazia
+    buffet_t *buffets = globals_get_buffets();
+    int seated = 0;
+    while (seated == 0) {
+        for (int i = 0; i < number_of_tables_global; i++) {
+            if (table[i]._empty_seats > 0) {
+                seated = 1;
+                table[i]._empty_seats--;
+                if (self->left_or_right == 'L') {
+                    buffets[self->_id_buffet].queue_left[5] = 0;
+                } else {
+                    buffets[self->_id_buffet].queue_right[5] = 0;
+                }
+            }
+        }
+    }
 }
 
 void student_serve(student_t *self)
 {
     /* Insira sua lógica aqui */
     // o aluno se serve baseado nas preferências que possui
-    //
+    buffet_t *buffets = globals_get_buffets();
+    while (self->_id_buffet < 5) {
+        if (self->_wishes[self->_buffet_position] == 1) {
+            buffets[self->_id_buffet]._meal[self->_buffet_position]--;
+        }
+        buffet_next_step(buffets, self);
+    }
 }
 
 void student_leave(student_t *self, table_t *table)

@@ -1,11 +1,15 @@
 #include <stdlib.h>
 #include "globals.h"
-
+#include <semaphore.h>
 queue_t *students_queue = NULL;
 table_t *table = NULL;
 buffet_t *buffets_ref = NULL;
 
 int students_number = 0;
+int number_of_tables_global = 0;
+int seats_per_table_global = 0;
+
+pthread_mutex_t mutex_queue;
 
 void globals_set_queue(queue_t *queue)
 {

@@ -1,9 +1,10 @@
 #include <stdlib.h>
 #include "buffet.h"
 #include "config.h"
+#include <semaphore.h>
 
-sem_t buffet_sem_esq[config.buffets];   // checar aonde incluir o pthreads.h e o semaphore.h
-sem_t buffet_sem_dir[config.buffets];
+sem_t buffet_sem_esq;   // checar aonde incluir o pthreads.h e o semaphore.h
+sem_t buffet_sem_dir;
 
 /*
 TODO:
@@ -23,7 +24,7 @@ void *buffet_run(void *arg)
         /* Máximo de porções por bacia (40 unidades). */
         _log_buffet(self);
 
-        msleep(5000); /* Pode retirar este sleep quando implementar a solução! */
+        //msleep(5000); /* Pode retirar este sleep quando implementar a solução! */
     }
 
     pthread_exit(NULL);
@@ -44,11 +45,11 @@ void buffet_init(buffet_t *self, int number_of_buffets)
         for(j= 0; j< 5; j++){
              /* A fila esquerda do buffet possui cinco posições. */
             self[i].queue_left[j] = 0;
-            sem_init(&buffet_sem_esq[i],0,5);   // inicializando semaforo do buffet
+            //sem_init(&buffet_sem_esq[i],0,5);   // inicializando semaforo do buffet
 
             /* A fila esquerda do buffet possui cinco posições. */
             self[i].queue_right[j] = 0;
-            sem_init(&buffet_sem_dir[i],0,5);   // inicializando semaforo do buffet
+            //sem_init(&buffet_sem_dir[i],0,5);   // inicializando semaforo do buffet
         }
 
         pthread_create(&self[i].thread, NULL, buffet_run, &self[i]);
@@ -86,21 +87,26 @@ int buffet_queue_insert(buffet_t *self, student_t *student)
 
 void buffet_next_step(buffet_t *self, student_t *student)
 {
+    // impedir que alunos passem um por cima do outro
     /* Se estudante ainda precisa se servir de mais alguma coisa... */
     if (student->_buffet_position + 1 < 5)
     {    /* Está na fila esquerda? */
         if (student->left_or_right == 'L')
         {   /* Caminha para a posição seguinte da fila do buffet.*/
             int position = student->_buffet_position;
-            self[student->_id_buffet].queue_left[position] = 0;
-            self[student->_id_buffet].queue_left[position + 1] = student->_id;
-            student->_buffet_position = student->_buffet_position + 1;
+            if (self[student->_id_buffet].queue_left[position + 1] == 0) {
+                self[student->_id_buffet].queue_left[position] = 0;
+                self[student->_id_buffet].queue_left[position + 1] = student->_id;
+                student->_buffet_position = student->_buffet_position + 1;
+            }
         }else /* Está na fila direita? */
         {   /* Caminha para a posição seguinte da fila do buffet.*/
             int position = student->_buffet_position;
-            self[student->_id_buffet].queue_right[position] = 0;
-            self[student->_id_buffet].queue_right[position + 1] = student->_id;
-            student->_buffet_position = student->_buffet_position + 1;
+            if (self[student->_id_buffet].queue_right[position] == 0) {
+                self[student->_id_buffet].queue_right[position] = 0;
+                self[student->_id_buffet].queue_right[position + 1] = student->_id;
+                student->_buffet_position = student->_buffet_position + 1;
+            }
         }
     }
 }

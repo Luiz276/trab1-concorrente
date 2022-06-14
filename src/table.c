@@ -5,9 +5,13 @@
 /* --------------------------------------------------------- */
 /* ATENÇÃO: Não será necessário modificar as funções abaixo! */
 /* --------------------------------------------------------- */
+extern int number_of_tables_global;
+extern int seats_per_table_global;
 
 table_t *table_init(int number_of_tables, int seats_per_table)
 {
+    number_of_tables_global = number_of_tables;
+    seats_per_table_global = seats_per_table;
     table_t *new_tables = malloc(sizeof(table_t) * number_of_tables);
     for (int i = 0; i < number_of_tables; i++)
     {
