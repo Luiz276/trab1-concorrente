@@ -67,4 +67,20 @@ extern void globals_set_buffets(buffet_t *buffets_ref);
  */
 extern buffet_t *globals_get_buffets();
 
+void globals_set_number_buffets(int buffets);
+
+int globals_get_number_buffets();
+
+void globals_set_students_served(int number);
+
+int globals_get_students_served();
+
+void globals_set_number_tables(int number);
+
+int globals_get_number_tables();
+
+void globals_set_buffets_criados(int criados);
+
+int globals_get_buffets_criados();
+
 #endif

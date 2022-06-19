@@ -12,6 +12,7 @@ typedef struct student
     int _id_buffet;                         /* Qual buffet o estudante está alocado?*/
     char left_or_right;                     /* Fila da esquerda(L) ou da direita(R)*/
     pthread_t thread;                       /* A thread */
+    int table_id;                           /* id da mesa onde sentou */
 } student_t;
 
 /**

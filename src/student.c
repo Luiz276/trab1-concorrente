@@ -10,8 +10,8 @@
 #include "globals.h"
 #include "table.h"
 
-extern int number_of_tables_global;
-extern int seats_per_table_global;
+pthread_mutex_t table_mutex;
+extern pthread_mutex_t n_student_served;
 
 void* student_run(void *arg)
 {
@@ -32,17 +32,29 @@ void student_seat(student_t *self, table_t *table)
     // aluno sai do buffet
     // Lógica onde o aluno procura uma cadeira vaga em uma mesa
     // loop que itera pelo array de mesas até achar uma com uma cadeira vazia
+    pthread_mutex_lock(&n_student_served);
+    int number_students_served = globals_get_students_served() + 1;
+    globals_set_students_served(number_students_served);
+    pthread_mutex_unlock(&n_student_served);
+    
     buffet_t *buffets = globals_get_buffets();
     int seated = 0;
-    while (seated == 0) {
-        for (int i = 0; i < number_of_tables_global; i++) {
-            if (table[i]._empty_seats > 0) {
-                seated = 1;
-                table[i]._empty_seats--;
-                if (self->left_or_right == 'L') {
-                    buffets[self->_id_buffet].queue_left[5] = 0;
-                } else {
-                    buffets[self->_id_buffet].queue_right[5] = 0;
+    if (self->_buffet_position >= 5) {
+        while (seated == 0) {
+            for (int i = 0; i < globals_get_number_tables(); i++) {
+                if (table[i]._empty_seats > 0) {
+                    pthread_mutex_lock(&table_mutex);   // apenas um estudante acessa a variável global da mesa por vez
+                    seated = 1;
+                    self->table_id = table[i]._id;
+                    table[i]._empty_seats--;
+                    if (self->left_or_right == 'L') {
+                        buffets[self->_id_buffet].queue_left[5] = 0;
+                        sem_post(&buffets[self->_id_buffet].buffet_sem_esq);
+                    } else {
+                        buffets[self->_id_buffet].queue_right[5] = 0;
+                        sem_post(&buffets[self->_id_buffet].buffet_sem_dir);
+                    }
+                    pthread_mutex_unlock(&table_mutex);
                 }
             }
         }
@@ -54,11 +66,12 @@ void student_serve(student_t *self)
     /* Insira sua lógica aqui */
     // o aluno se serve baseado nas preferências que possui
     buffet_t *buffets = globals_get_buffets();
-    while (self->_id_buffet < 5) {
-        if (self->_wishes[self->_buffet_position] == 1) {
+    while (self->_id_buffet < 4) {
+        if (self->_wishes[self->_buffet_position] == 1 
+          && buffets[self->_id_buffet]._meal[self->_buffet_position] > 0) {
             buffets[self->_id_buffet]._meal[self->_buffet_position]--;
+            buffet_next_step(buffets, self);
         }
-        buffet_next_step(buffets, self);
     }
 }
 

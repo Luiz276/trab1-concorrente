@@ -4,6 +4,7 @@
 #include <pthread.h>
 
 #include "queue.h"
+#include <semaphore.h>
 
 
 typedef struct buffet
@@ -15,6 +16,9 @@ typedef struct buffet
     int queue_right[5];
     
     pthread_t thread; /* Thread do buffet   */
+    
+    sem_t buffet_sem_esq;
+    sem_t buffet_sem_dir;
 } buffet_t;
 
 /**

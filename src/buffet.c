@@ -1,10 +1,8 @@
 #include <stdlib.h>
 #include "buffet.h"
 #include "config.h"
+#include "globals.h"
 #include <semaphore.h>
-
-sem_t buffet_sem_esq;   // checar aonde incluir o pthreads.h e o semaphore.h
-sem_t buffet_sem_dir;
 
 /*
 TODO:
@@ -14,16 +12,18 @@ com o posicionamento e a necessidade de semáforos
 
 void *buffet_run(void *arg)
 {   
-    int all_students_entered = FALSE;
+    // int number_students = globals_get_students();
+    int all_students_served = globals_get_students_served() > 0 ? FALSE : TRUE;
     buffet_t *self = (buffet_t*) arg;
     
     /*  O buffet funciona enquanto houver alunos na fila externa. */
-    while (all_students_entered == FALSE)
+    while (all_students_served == FALSE)
     {
         /* Cada buffet possui: Arroz, Feijão, Acompanhamento, Proteína e Salada */
         /* Máximo de porções por bacia (40 unidades). */
-        _log_buffet(self);
 
+        _log_buffet(self);
+        all_students_served = globals_get_students_served() > 0 ? FALSE : TRUE;
         //msleep(5000); /* Pode retirar este sleep quando implementar a solução! */
     }
 
@@ -32,6 +32,7 @@ void *buffet_run(void *arg)
 
 void buffet_init(buffet_t *self, int number_of_buffets)
 {
+    globals_set_number_buffets(number_of_buffets);
     int i = 0, j = 0;
     for (i = 0; i < number_of_buffets; i++)
     {
@@ -51,9 +52,11 @@ void buffet_init(buffet_t *self, int number_of_buffets)
             self[i].queue_right[j] = 0;
             //sem_init(&buffet_sem_dir[i],0,5);   // inicializando semaforo do buffet
         }
-
+        sem_init(&self->buffet_sem_esq, 0, 5);
+        sem_init(&self->buffet_sem_dir, 0, 5);
         pthread_create(&self[i].thread, NULL, buffet_run, &self[i]);
     }
+    globals_set_buffets_criados(1);
 }
 
 
@@ -65,6 +68,7 @@ int buffet_queue_insert(buffet_t *self, student_t *student)
         /* Verifica se a primeira posição está vaga */
         if (!self[student->_id_buffet].queue_left[0])
         {
+            sem_wait(&self[student->_id_buffet].buffet_sem_esq);
             self[student->_id_buffet].queue_left[0] = student->_id;
             student->_buffet_position = 0;
             return TRUE;
@@ -76,6 +80,7 @@ int buffet_queue_insert(buffet_t *self, student_t *student)
         if (!self[student->_id_buffet].queue_right[0])
         {
             /* Verifica se a primeira posição está vaga */
+            sem_wait(&self[student->_id_buffet].buffet_sem_dir);
             self[student->_id_buffet].queue_right[0] = student->_id;
             student->_buffet_position = 0;
             return TRUE;
